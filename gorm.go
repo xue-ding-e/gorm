@@ -113,6 +113,22 @@ type DB struct {
 	clone        int
 }
 
+// DialectorName returns the name of the underlying dialector, or an empty
+// string when no dialector is set. The name is used to resolve database-specific
+// type tags like `gorm:"type:aaa;mysql:type:bbb"`.
+func (db *DB) DialectorName() string {
+	if db.Dialector != nil {
+		return db.Dialector.Name()
+	}
+	return ""
+}
+
+// parseSchema parses value's schema with the current dialector name, so that
+// database-specific type tags are resolved consistently with Statement.Parse.
+func (db *DB) parseSchema(value interface{}) (*schema.Schema, error) {
+	return schema.ParseWithSpecialTableNameAndDialect(value, db.cacheStore, db.NamingStrategy, "", db.DialectorName())
+}
+
 // Session session config when create session with Session() method
 type Session struct {
 	DryRun                   bool
